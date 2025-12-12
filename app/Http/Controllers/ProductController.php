@@ -15,24 +15,26 @@ class ProductController extends Controller
 
     // CREAR PRODUCTO
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'price' => 'required|numeric'
-        ]);
+{
+    $request->validate([
+        'name' => 'required',
+        'price' => 'required|numeric',
+        'image' => 'required|string'
+    ]);
 
-        $product = Product::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'image_url' => $request->image
-        ]);
+    $product = Product::create([
+        'name' => $request->name,
+        'description' => $request->description,
+        'price' => $request->price,
+        'image_url' => $request->image  // ⭐ URL COMPLETA
+    ]);
 
-        return response()->json([
-            'message' => 'Producto creado con éxito',
-            'product' => $product
-        ], 201);
-    }
+    return response()->json([
+        'message' => 'Producto creado con éxito',
+        'product' => $product
+    ], 201);
+}
+
 
     // MOSTRAR PRODUCTO POR ID
     public function show($id)

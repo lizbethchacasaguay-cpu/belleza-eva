@@ -13,13 +13,13 @@ class CommentController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'comment' => 'required'
+            'comment' => 'required|string|max:200', 
         ]);
 
         $comment = Comment::create([
             'user_id' => auth()->id(),
             'product_id' => $request->product_id,
-            'comment' => $request->comment
+            'text' => $request->comment
         ]);
 
         return response()->json([
