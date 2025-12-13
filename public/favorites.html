@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mis Favoritos - Belleza Eva</title>
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a href="index.html" class="navbar-brand">Belleza Eva</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">⭐ Mis Favoritos</h2>
+    <div id="favoritesList" class="row"></div>
+</div>
+
+<script>
+// Obtener IDs guardados
+let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+// Si no hay favoritos
+if (favorites.length === 0) {
+    document.getElementById("favoritesList").innerHTML =
+        "<p class='text-center'>No tienes productos favoritos 😢</p>";
+} else {
+    // Traer productos desde la API
+    fetch("http://127.0.0.1:8000/api/products")
+    .then(res => res.json())
+    .then(products => {
+
+        let html = "";
+
+        products.forEach(p => {
+            if (favorites.includes(p.id)) {
+                html += `
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+
+                        <img src="${p.image_url}" 
+                             class="card-img-top"
+                             style="height:250px; object-fit:cover;">
+
+                        <div class="card-body">
+                            <h5 class="card-title">${p.name}</h5>
+                            <p class="card-text">${p.description ?? ''}</p>
+                            <p class="fw-bold">$${p.price}</p>
+
+                            <button class="btn btn-danger w-100"
+                              onclick="removeFavorite(${p.id})">
+                              ❌ Quitar de favoritos
+                            </button>
+                        </div>
+
+                    </div>
+                </div>`;
+            }
+        });
+
+        document.getElementById("favoritesList").innerHTML = html;
+    });
+}
+
+// Quitar favorito
+function removeFavorite(id) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    favorites = favorites.filter(f => f !== id);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    location.reload();
+}
+</script>
+
+</body>
+</html>

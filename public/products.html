@@ -27,32 +27,54 @@ fetch("http://127.0.0.1:8000/api/products")
     let html = "";
 
     products.forEach(p => {
-        html += `
-        <div class="col-md-4 mb-3">
-            <div class="card">
+    html += `
+    <div class="col-md-4 mb-3">
+        <div class="card">
 
-                <img src="${p.image_url}" 
-                     class="card-img-top" 
-                     alt="Imagen del producto"
-                     style="height:250px; object-fit:cover;">
+            <img src="${p.image_url}" 
+                 class="card-img-top" 
+                 alt="Imagen del producto"
+                 style="height:250px; object-fit:cover;">
 
-                <div class="card-body">
-                    <h5 class="card-title">${p.name}</h5>
-                    <p class="card-text">${p.description ?? ''}</p>
-                    <p class="fw-bold">$${p.price}</p>
+            <div class="card-body">
+                <h5 class="card-title">${p.name}</h5>
+                <p class="card-text">${p.description ?? ''}</p>
+                <p class="fw-bold">$${p.price}</p>
 
-                    <a href="/products/${p.id}" class="btn btn-primary w-100">
-                        Ver detalles
-                    </a>
-                </div>
+                <a href="product.html?id=${p.id}" 
+                   class="btn btn-primary w-100 mb-2">
+                    Ver detalles
+                </a>
 
+                <button 
+                    class="btn btn-outline-warning w-100"
+                    onclick="addToFavorites(${p.id})">
+                    ⭐ Agregar a Favoritos
+                </button>
             </div>
-        </div>`;
-    });
+
+        </div>
+    </div>`;
+});
+
 
     document.getElementById("productsList").innerHTML = html;
 });
+
+function addToFavorites(productId) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+    if (!favorites.includes(productId)) {
+        favorites.push(productId);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        alert("Producto agregado a favoritos ⭐");
+    } else {
+        alert("Este producto ya está en favoritos");
+    }
+}
 </script>
+  
+
 
 </body>
 </html>  

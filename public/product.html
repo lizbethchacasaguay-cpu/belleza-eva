@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalle del Producto - Belleza Eva</title>
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a href="products.html" class="navbar-brand">← Volver</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <!-- PRODUCTO -->
+    <div id="productDetail" class="mb-4"></div>
+
+    <!-- COMENTARIOS -->
+    <h4>Comentarios</h4>
+    <ul id="commentsList" class="list-group mb-3"></ul>
+
+    <!-- FORMULARIO -->
+    <textarea id="commentText" class="form-control mb-2"
+        placeholder="Escribe tu comentario"></textarea>
+
+    <button class="btn btn-primary" onclick="addComment()">
+        Agregar comentario
+    </button>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const productId = params.get("id");
+
+// Cargar producto
+fetch(`http://127.0.0.1:8000/api/products/${productId}`)
+.then(res => res.json())
+.then(p => {
+    document.getElementById("productDetail").innerHTML = `
+        <div class="card">
+            <img src="${p.image_url}" class="card-img-top" style="height:300px;object-fit:cover;">
+            <div class="card-body">
+                <h3>${p.name}</h3>
+                <p>${p.description}</p>
+                <p class="fw-bold">$${p.price}</p>
+            </div>
+        </div>
+    `;
+});
+
+// Cargar comentarios
+fetch(`http://127.0.0.1:8000/api/comments/product/${productId}`)
+.then(res => res.json())
+.then(comments => {
+    let html = "";
+    comments.forEach(c => {
+        html += `<li class="list-group-item">${c.text}</li>`;
+    });
+    document.getElementById("commentsList").innerHTML = html;
+});
+
+// Agregar comentario
+function addComment() {
+    const text = document.getElementById("commentText").value;
+
+    fetch("http://127.0.0.1:8000/api/comments", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            comment: text
+        })
+    })
+    .then(() => location.reload());
+
+
+
+}
+</script>
+
+</body>
+</html>
