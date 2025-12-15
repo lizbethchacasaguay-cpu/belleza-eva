@@ -16,16 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         //
         $middleware->alias([
-        'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-        'auth.api' => \Illuminate\Auth\Middleware\Authenticate::class . ':sanctum',
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+            'auth.api' => \Illuminate\Auth\Middleware\Authenticate::class . ':sanctum',
+            'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->is('api/*')) {
+            // Retornar JSON para todas las solicitudes de API
             return response()->json([
-                'message' => 'Unauthenticated (401) - Token Invalido o Faltante.'
+                'message' => 'Unauthenticated - Token inválido o faltante.'
             ], 401);
-            }
         });
     })->create();

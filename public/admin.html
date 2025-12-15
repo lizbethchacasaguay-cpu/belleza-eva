@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Belleza Eva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background-color: #2c3e50;
+            min-height: 100vh;
+            padding: 20px;
+            position: fixed;
+            width: 250px;
+            left: 0;
+            top: 0;
+            color: white;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+        }
+        .sidebar a.active {
+            background-color: #e74c3c;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .navbar-admin {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .product-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h4 class="mb-4">🌸 Belleza Eva</h4>
+    <a href="index.html" class="btn btn-sm btn-light mb-3 w-100">← Volver al inicio</a>
+    <hr style="border-color: #555;">
+    <h6 class="mt-3">MENÚ</h6>
+    <a href="#" onclick="showSection('dashboard')" class="active" id="menuDashboard">
+        📊 Dashboard
+    </a>
+    <a href="#" onclick="showSection('crear')" id="menuCrear">
+        ➕ Crear Producto
+    </a>
+    <a href="#" onclick="showSection('editar')" id="menuEditar">
+        ✏️ Gestionar Productos
+    </a>
+    <hr style="border-color: #555;">
+    <button class="btn btn-danger btn-sm w-100" onclick="logout()">
+        🚪 Cerrar Sesión
+    </button>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div class="main-content">
+    <!-- NAVBAR -->
+    <div class="navbar-admin">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">⚙️ Panel de Administración</h3>
+            <span id="adminUserName">Administrador</span>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="sectionDashboard" class="content-section">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="form-container">
+                    <h4 class="mb-3">📈 Estadísticas</h4>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Productos Totales</h5>
+                                    <p style="font-size: 2rem; color: #3498db;" id="totalProducts">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Usuarios</h5>
+                                    <p style="font-size: 2rem; color: #2ecc71;" id="totalUsers">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Comentarios</h5>
+                                    <p style="font-size: 2rem; color: #f39c12;" id="totalComments">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Favoritos</h5>
+                                    <p style="font-size: 2rem; color: #e74c3c;" id="totalFavorites">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREAR PRODUCTO -->
+    <div id="sectionCrear" class="content-section" style="display:none;">
+        <div class="form-container">
+            <h4 class="mb-4">➕ Crear Nuevo Producto</h4>
+            
+            <form id="formCrearProducto">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Nombre del Producto</label>
+                        <input type="text" class="form-control" id="inputNombre" required 
+                               placeholder="Ej: Crema facial">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Precio (USD)</label>
+                        <input type="number" class="form-control" id="inputPrecio" required 
+                               step="0.01" placeholder="25.99">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea class="form-control" id="inputDescripcion" rows="4" 
+                              placeholder="Describe los beneficios y características del producto"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">🖼️ Cargar Imagen</label>
+                    <input type="file" class="form-control" id="inputImagen" accept="image/*" required>
+                    <small class="text-muted">Formatos permitidos: JPG, PNG, GIF (máx. 2MB)</small>
+                    <img id="previewImagen" class="image-preview mt-2" style="display:none;">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        ✅ Crear Producto
+                    </button>
+                    <button type="reset" class="btn btn-secondary btn-lg">
+                        🔄 Limpiar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GESTIONAR PRODUCTOS (EDITAR/ELIMINAR) -->
+    <div id="sectionEditar" class="content-section" style="display:none;">
+        <div class="form-container">
+            <h4 class="mb-4">✏️ Gestionar Productos</h4>
+            
+            <div id="productosLista" class="row">
+                <div class="col-12">
+                    <p class="text-muted">Cargando productos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL PARA EDITAR -->
+        <div class="modal fade" id="modalEditar" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">✏️ Editar Producto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formEditarProducto">
+                            <input type="hidden" id="editProductId">
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nombre</label>
+                                <input type="text" class="form-control" id="editNombre" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Precio (USD)</label>
+                                <input type="number" class="form-control" id="editPrecio" required step="0.01">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Descripción</label>
+                                <textarea class="form-control" id="editDescripcion" rows="4"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🖼️ Cambiar Imagen (opcional)</label>
+                                <input type="file" class="form-control" id="editImagen" accept="image/*">
+                                <small class="text-muted">Deja vacío para mantener la imagen actual</small>
+                                <img id="previewEditImagen" class="image-preview mt-2">
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-warning">
+                                    💾 Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    ❌ Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- BOOTSTRAP JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000/api";
+let token = localStorage.getItem("token");
+let editingProductId = null;
+
+// VERIFICAR SI ES ADMIN
+function verificarAdmin() {
+    if (!token) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    fetch(`${API_BASE}/test-auth`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.isAdmin) {
+            alert("❌ Solo administradores pueden acceder");
+            window.location.href = "index.html";
+        } else {
+            const userData = data.user;
+            document.getElementById("adminUserName").textContent = 
+                `👤 ${userData.name} (Admin)`;
+            cargarEstadisticas();
+        }
+    })
+    .catch(() => {
+        window.location.href = "index.html";
+    });
+}
+
+// CAMBIAR SECCIONES
+function showSection(section) {
+    document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('[id^="menu"]').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`section${section.charAt(0).toUpperCase() + section.slice(1)}`).style.display = 'block';
+    document.getElementById(`menu${section.charAt(0).toUpperCase() + section.slice(1)}`).classList.add('active');
+
+    if (section === 'editar') {
+        cargarProductos();
+    }
+}
+
+// CARGAR ESTADÍSTICAS
+function cargarEstadisticas() {
+    fetch(`${API_BASE}/products`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(products => {
+        document.getElementById("totalProducts").textContent = products.length;
+    });
+}
+
+// PREVIEW DE IMAGEN AL CARGAR
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'inputImagen') {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('previewImagen');
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    if (e.target.id === 'editImagen') {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('previewEditImagen').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+});
+
+// CREAR PRODUCTO
+document.getElementById('formCrearProducto').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById('inputNombre').value;
+    const precio = document.getElementById('inputPrecio').value;
+    const descripcion = document.getElementById('inputDescripcion').value;
+    const imagenFile = document.getElementById('inputImagen').files[0];
+
+    if (!imagenFile) {
+        alert('❌ Debes cargar una imagen');
+        return;
+    }
+
+    // Crear FormData para enviar archivo
+    const formData = new FormData();
+    formData.append('name', nombre);
+    formData.append('price', precio);
+    formData.append('description', descripcion);
+    formData.append('image', imagenFile);
+
+    try {
+        const response = await fetch(`${API_BASE}/products`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('✅ Producto creado exitosamente');
+            document.getElementById('formCrearProducto').reset();
+            document.getElementById('previewImagen').style.display = 'none';
+            showSection('editar');
+        } else {
+            alert('❌ Error: ' + (data.message || 'No se pudo crear el producto'));
+        }
+    } catch (error) {
+        alert('❌ Error de conexión: ' + error.message);
+    }
+});
+
+// CARGAR PRODUCTOS PARA EDITAR
+function cargarProductos() {
+    fetch(`${API_BASE}/products`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(products => {
+        const container = document.getElementById('productosLista');
+        
+        if (products.length === 0) {
+            container.innerHTML = '<p class="text-muted">No hay productos aún</p>';
+            return;
+        }
+
+        container.innerHTML = products.map(product => `
+            <div class="col-md-6 mb-3">
+                <div class="product-card">
+                    <img src="${product.image_url}" alt="${product.name}" class="product-img">
+                    <h5 class="mt-2">${product.name}</h5>
+                    <p class="text-muted small">${product.description || 'Sin descripción'}</p>
+                    <p class="fw-bold text-success">$${product.price}</p>
+                    <div>
+                        <button class="btn-edit" onclick="abrirEditarProducto(${product.id})">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn-delete" onclick="eliminarProducto(${product.id})">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        document.getElementById('productosLista').innerHTML = 
+            '<p class="text-danger">Error al cargar productos</p>';
+    });
+}
+
+// ABRIR MODAL PARA EDITAR
+function abrirEditarProducto(productId) {
+    fetch(`${API_BASE}/products/${productId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(product => {
+        document.getElementById('editProductId').value = product.id;
+        document.getElementById('editNombre').value = product.name;
+        document.getElementById('editPrecio').value = product.price;
+        document.getElementById('editDescripcion').value = product.description || '';
+        document.getElementById('previewEditImagen').src = product.image_url;
+        
+        new bootstrap.Modal(document.getElementById('modalEditar')).show();
+    });
+}
+
+// EDITAR PRODUCTO
+document.getElementById('formEditarProducto').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const productId = document.getElementById('editProductId').value;
+    const nombre = document.getElementById('editNombre').value;
+    const precio = document.getElementById('editPrecio').value;
+    const descripcion = document.getElementById('editDescripcion').value;
+    const imagenFile = document.getElementById('editImagen').files[0];
+
+    const formData = new FormData();
+    formData.append('name', nombre);
+    formData.append('price', precio);
+    formData.append('description', descripcion);
+    if (imagenFile) {
+        formData.append('image', imagenFile);
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('✅ Producto actualizado exitosamente');
+            bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+            cargarProductos();
+        } else {
+            alert('❌ Error: ' + (data.message || 'No se pudo actualizar'));
+        }
+    } catch (error) {
+        alert('❌ Error de conexión: ' + error.message);
+    }
+});
+
+// ELIMINAR PRODUCTO
+function eliminarProducto(productId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+        return;
+    }
+
+    fetch(`${API_BASE}/products/${productId}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert('✅ Producto eliminado');
+        cargarProductos();
+    })
+    .catch(err => {
+        alert('❌ Error al eliminar: ' + err.message);
+    });
+}
+
+// LOGOUT
+function logout() {
+    if (confirm('¿Deseas cerrar sesión?')) {
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+    }
+}
+
+// INICIALIZAR
+document.addEventListener('DOMContentLoaded', verificarAdmin);
+</script>
+
+</body>
+</html>

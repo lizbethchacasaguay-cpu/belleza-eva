@@ -13,6 +13,15 @@ Route::get('/test', function() {
     return response()->json(['message' => 'API funcionando correctamente']);
 });
 
+// Ruta de prueba con autenticación
+Route::middleware('auth:sanctum')->get('/test-auth', function(Request $request) {
+    return response()->json([
+        'message' => 'Autenticado correctamente',
+        'user' => $request->user(),
+        'isAdmin' => $request->user()->isAdmin()
+    ]);
+});
+
 // Rutas públicas (sin token)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -27,11 +36,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // CRUD de productos (protegidos)
-    Route::post('/products', [ProductController::class, 'store']);
+    // GET productos (todos los usuarios pueden ver)
     Route::get('/products/{id}', [ProductController::class, 'show']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // CRUD de productos (SOLO ADMIN)
+    Route::middleware('admin')->group(function () {
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    });
 
     // Favoritos
     Route::get('/favorites', [FavoriteController::class, 'index']);
@@ -41,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Comentarios
     Route::post('/comments', [CommentController::class, 'store']);
     Route::get('/comments/product/{product_id}', [CommentController::class, 'showByProduct']);
-    Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
+    
 });
 
 

@@ -13,19 +13,16 @@ class CommentController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'comment' => 'required|string|max:200', 
+            'text' => 'required|string'
         ]);
 
-        $comment = Comment::create([
+        Comment::create([
             'user_id' => auth()->id(),
             'product_id' => $request->product_id,
-            'text' => $request->comment
+            'text' => $request->text
         ]);
 
-        return response()->json([
-            'message' => 'Comentario agregado con éxito',
-            'comment' => $comment
-        ], 201);
+        return response()->json(['message' => 'Comentario guardado'], 201);
     }
 
     // LISTAR COMENTARIOS POR PRODUCTO
@@ -33,9 +30,20 @@ class CommentController extends Controller
     {
         $comments = Comment::where('product_id', $product_id)
                            ->with('user')
-                           ->get();
+                           ->get()
+                           ->map(function($comment) {
+                               return [
+                                   'id' => $comment->id,
+                                   'user_name' => $comment->user->name,
+                                   'user_id' => $comment->user_id,
+                                   'comment' => $comment->text,
+                                   'text' => $comment->text,
+                                   'product_id' => $comment->product_id,
+                                   'created_at' => $comment->created_at
+                               ];
+                           });
 
-        return $comments;
+        return response()->json($comments);
     }
 
     // ELIMINAR COMENTARIO

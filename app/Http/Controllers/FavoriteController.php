@@ -15,6 +15,15 @@ class FavoriteController extends Controller
             'product_id' => 'required|exists:products,id'
         ]);
 
+        // Verificar si el favorito ya existe
+        $existingFavorite = Favorite::where('user_id', auth()->id())
+                                    ->where('product_id', $request->product_id)
+                                    ->first();
+
+        if ($existingFavorite) {
+            return response()->json(['message' => 'Este producto ya está en favoritos'], 200);
+        }
+
         $favorite = Favorite::create([
             'user_id' => auth()->id(),
             'product_id' => $request->product_id

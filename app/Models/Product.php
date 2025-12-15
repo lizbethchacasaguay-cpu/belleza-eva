@@ -15,4 +15,16 @@ class Product extends Model
         'price',
         'image_url',
     ];
+
+    // Relación con favoritos
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    // Relación con comentarios
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }

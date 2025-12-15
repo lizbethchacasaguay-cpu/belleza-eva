@@ -11,7 +11,6 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
@@ -23,7 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        
+        'role',
     ];
 
     /**
@@ -47,5 +46,33 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Verifica si el usuario es administrador
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Verifica si el usuario es usuario normal
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    // Relación con comentarios
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    // Relación con favoritos
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
     }
 }
