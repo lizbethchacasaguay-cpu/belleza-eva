@@ -112,6 +112,9 @@
     <a href="#" onclick="showSection('editar')" id="menuEditar">
         ✏️ Gestionar Productos
     </a>
+    <a href="users.html" class="btn btn-sm btn-info w-100 mt-2">
+        👥 Gestionar Usuarios
+    </a>
     <hr style="border-color: #555;">
     <button class="btn btn-danger btn-sm w-100" onclick="logout()">
         🚪 Cerrar Sesión
@@ -337,8 +340,15 @@ function cargarEstadisticas() {
         headers: { "Authorization": `Bearer ${token}` }
     })
     .then(res => res.json())
-    .then(products => {
-        document.getElementById("totalProducts").textContent = products.length;
+    .then(data => {
+        // Manejar paginación si existe
+        const products = data.data || data;
+        const totalProducts = Array.isArray(products) ? products.length : 0;
+        document.getElementById("totalProducts").textContent = totalProducts;
+    })
+    .catch(err => {
+        console.error('Error cargando estadísticas:', err);
+        document.getElementById("totalProducts").textContent = '0';
     });
 }
 
@@ -420,10 +430,12 @@ function cargarProductos() {
         headers: { "Authorization": `Bearer ${token}` }
     })
     .then(res => res.json())
-    .then(products => {
+    .then(data => {
         const container = document.getElementById('productosLista');
+        // Manejar paginación si existe
+        const products = data.data || data;
         
-        if (products.length === 0) {
+        if (!Array.isArray(products) || products.length === 0) {
             container.innerHTML = '<p class="text-muted">No hay productos aún</p>';
             return;
         }
@@ -431,7 +443,10 @@ function cargarProductos() {
         container.innerHTML = products.map(product => `
             <div class="col-md-6 mb-3">
                 <div class="product-card">
-                    <img src="${product.image_url}" alt="${product.name}" class="product-img">
+                    <img src="${product.image_url}" 
+                         alt="${product.name}" 
+                         class="product-img"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23ccc%22 width=%22200%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2214%22 fill=%22%23999%22%3EImagen no disponible%3C/text%3E%3C/svg%3E'">
                     <h5 class="mt-2">${product.name}</h5>
                     <p class="text-muted small">${product.description || 'Sin descripción'}</p>
                     <p class="fw-bold text-success">$${product.price}</p>
@@ -450,7 +465,7 @@ function cargarProductos() {
     .catch(err => {
         console.error('Error:', err);
         document.getElementById('productosLista').innerHTML = 
-            '<p class="text-danger">Error al cargar productos</p>';
+            '<p class="text-danger">Error al cargar productos. Verifique que está autenticado como admin.</p>';
     });
 }
 
@@ -459,15 +474,25 @@ function abrirEditarProducto(productId) {
     fetch(`${API_BASE}/products/${productId}`, {
         headers: { "Authorization": `Bearer ${token}` }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('No se puede acceder al producto');
+        return res.json();
+    })
     .then(product => {
         document.getElementById('editProductId').value = product.id;
         document.getElementById('editNombre').value = product.name;
         document.getElementById('editPrecio').value = product.price;
         document.getElementById('editDescripcion').value = product.description || '';
-        document.getElementById('previewEditImagen').src = product.image_url;
+        const previewImg = document.getElementById('previewEditImagen');
+        previewImg.src = product.image_url;
+        previewImg.onerror = function() {
+            this.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23ccc%22 width=%22200%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2214%22 fill=%22%23999%22%3EImagen no disponible%3C/text%3E%3C/svg%3E';
+        };
         
         new bootstrap.Modal(document.getElementById('modalEditar')).show();
+    })
+    .catch(err => {
+        alert('❌ Error: ' + err.message);
     });
 }
 

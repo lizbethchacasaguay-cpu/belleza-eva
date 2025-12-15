@@ -10,7 +10,7 @@ class ProductController extends Controller
 {
     protected FirebaseServices $firebaseService; // Tipado para la propiedad
 
-    // 1. CONSTRUCTOR CORREGIDO: Inyección de dependencias
+    // 1. CONSTRUCTOR  Inyección de dependencias
     public function __construct(FirebaseServices $firebaseService)
     {
         $this->firebaseService = $firebaseService; 
@@ -28,20 +28,24 @@ class ProductController extends Controller
         // 2. VALIDACIÓN CORREGIDA: 'image' debe ser file/image
         $request->validate([
             'name' => 'required|string',
-            'description' => 'nullable|string', // Añadido tipado si es API
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'required|file|image|max:2048' // El archivo debe ser obligatorio
+            'image' => 'required|file|image|max:2048'
         ]);
 
-        $data = $request->except('image'); // Tomamos todos los datos menos el archivo
+        $data = $request->except('image');
 
         // LÓGICA DE SUBIDA DE IMAGEN
         if ($request->hasFile('image')) {
-            // Llama al servicio de Firebase. La carpeta 'productos' está bien.
-            $url = $this->firebaseService->uploadImage($request->file('image'), 'productos');
-            $data['image_url'] = $url; // Guarda la URL en los datos
+            try {
+                $url = $this->firebaseService->uploadImage($request->file('image'), 'productos');
+                $data['image_url'] = $url;
+            } catch (\Exception $e) {
+                // Si el upload falla, aún así crear el producto sin imagen
+                \Log::error('Error al subir imagen: ' . $e->getMessage());
+                $data['image_url'] = null;
+            }
         } else {
-            // Si la imagen fuera opcional, aquí se asignaría null
             $data['image_url'] = null;
         }
 

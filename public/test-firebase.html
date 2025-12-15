@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase Imágenes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #333;
+        }
+        .product {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 1px solid #ccc;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧪 Test de Firebase Imágenes</h1>
+    
+    <h2>1. Verificar productos en API</h2>
+    <button onclick="verificarAPI()" class="btn btn-primary">Verificar API</button>
+    <div id="apiResult"></div>
+
+    <h2>2. Listar productos con imágenes</h2>
+    <div id="productsList"></div>
+
+    <h2>3. Test de URL Direct</h2>
+    <input type="text" id="testUrl" placeholder="Pega una URL de Firebase aquí" style="width:100%; padding:10px;">
+    <button onclick="testearURL()" class="btn btn-info">Probar URL</button>
+    <div id="urlResult"></div>
+
+    <h2>4. Acciones</h2>
+    <button onclick="window.location.href='crear-test.html'" class="btn btn-success">➕ Crear Producto de Prueba</button>
+    <button onclick="window.location.href='admin.html'" class="btn btn-warning">⚙️ Panel Admin</button>
+    <button onclick="window.location.href='products.html'" class="btn btn-info">📦 Ver Catálogo</button>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000/api";
+
+function verificarAPI() {
+    console.log("Verificando API...");
+    const result = document.getElementById('apiResult');
+    result.innerHTML = '<p>Cargando...</p>';
+    
+    fetch(`${API_BASE}/products`)
+        .then(res => {
+            console.log("Status:", res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log("Datos recibidos:", data);
+            
+            if (!Array.isArray(data)) {
+                result.innerHTML = '<p class="error">❌ API no retornó array</p>';
+                result.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                return;
+            }
+            
+            if (data.length === 0) {
+                result.innerHTML = '<p class="error">❌ No hay productos en la BD</p>';
+                return;
+            }
+            
+            result.innerHTML = `<p class="success">✅ API funcionando. Productos: ${data.length}</p>`;
+            
+            // Mostrar primer producto
+            const first = data[0];
+            result.innerHTML += '<h3>Primer producto:</h3>';
+            result.innerHTML += '<pre>' + JSON.stringify(first, null, 2) + '</pre>';
+            
+            // Cargar lista
+            cargarProductos();
+        })
+        .catch(err => {
+            result.innerHTML = '<p class="error">❌ Error: ' + err.message + '</p>';
+        });
+}
+
+function cargarProductos() {
+    fetch(`${API_BASE}/products`)
+        .then(res => res.json())
+        .then(products => {
+            const container = document.getElementById('productsList');
+            container.innerHTML = '';
+            
+            if (products.length === 0) {
+                container.innerHTML = '<p class="error">No hay productos</p>';
+                return;
+            }
+            
+            products.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'product';
+                
+                let imgHtml = '';
+                if (p.image_url) {
+                    imgHtml = `<img src="${p.image_url}" alt="${p.name}" onerror="this.style.border='3px solid red'; this.title='ERROR: Imagen no carga';">`;
+                } else {
+                    imgHtml = '<p class="error">❌ Sin URL de imagen</p>';
+                }
+                
+                div.innerHTML = `
+                    <h3>${p.name}</h3>
+                    <p><strong>ID:</strong> ${p.id}</p>
+                    <p><strong>Precio:</strong> $${p.price}</p>
+                    <p><strong>URL:</strong> <code>${p.image_url || 'NULL'}</code></p>
+                    ${imgHtml}
+                `;
+                
+                container.appendChild(div);
+            });
+        })
+        .catch(err => {
+            document.getElementById('productsList').innerHTML = '<p class="error">Error: ' + err.message + '</p>';
+        });
+}
+
+function testearURL() {
+    const url = document.getElementById('testUrl').value.trim();
+    if (!url) {
+        alert('Ingresa una URL');
+        return;
+    }
+    
+    const result = document.getElementById('urlResult');
+    result.innerHTML = '<p>Probando...</p>';
+    
+    const img = new Image();
+    img.onload = function() {
+        result.innerHTML = '<p class="success">✅ Imagen carga correctamente</p>';
+        result.innerHTML += '<img src="' + url + '" style="max-width:300px;">';
+    };
+    img.onerror = function() {
+        result.innerHTML = '<p class="error">❌ No se puede cargar la imagen</p>';
+        result.innerHTML += '<p>Posibles causas:</p>';
+        result.innerHTML += '<ul>';
+        result.innerHTML += '<li>URL incorrecta</li>';
+        result.innerHTML += '<li>Archivo no existe en Firebase</li>';
+        result.innerHTML += '<li>Firebase Storage no está accesible</li>';
+        result.innerHTML += '<li>CORS bloqueado</li>';
+        result.innerHTML += '</ul>';
+    };
+    img.src = url;
+}
+
+// Ejecutar automáticamente
+window.onload = function() {
+    verificarAPI();
+};
+</script>
+
+</body>
+</html>

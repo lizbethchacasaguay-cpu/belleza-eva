@@ -2,46 +2,15 @@
 
 namespace App\Services;
 
-use Kreait\Firebase\Factory;
 use Throwable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class FirebaseServices
 {
-    protected $storage;
-    protected $bucketName;
-
-    public function __construct()
-    {
-        try {
-            // Obtener ruta correcta del archivo de credenciales
-            // Usar base_path para acceder desde la raíz del proyecto
-            $credentialsPath = base_path('storage/app/public/firebase_credentials.json');
-            
-            // Validar que el archivo existe
-            if (!file_exists($credentialsPath)) {
-                throw new \Exception("Archivo de credenciales no encontrado: {$credentialsPath}");
-            }
-
-            // Crear conexión a Firebase
-            $factory = (new Factory)
-                ->withServiceAccount($credentialsPath);
-
-            // Inicializar servicio de Storage
-            $this->storage = $factory->createStorage();
-            $this->bucketName = env('FIREBASE_STORAGE_BUCKET');
-
-            if (!$this->bucketName) {
-                throw new \Exception("FIREBASE_STORAGE_BUCKET no configurado en .env");
-            }
-        } catch (Throwable $e) {
-            Log::error('Error al inicializar Firebase: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
     /**
-     * Sube un archivo a Firebase y devuelve la URL pública.
+     * Sube un archivo y devuelve la URL pública.
+     * Usa almacenamiento local como principal para mayor confiabilidad.
      * 
      * @param \Illuminate\Http\UploadedFile $file
      * @param string $folder
@@ -57,87 +26,73 @@ class FirebaseServices
             }
 
             // Generar nombre único para el archivo
-            $fileName = $folder . '/' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $folderPath = $folder;
 
-            // Obtener bucket
-            $bucket = $this->storage->getBucket($this->bucketName);
-
-            // Subir archivo a Firebase Storage
-            $object = $bucket->upload(
-                fopen($file->getPathname(), 'r'),
-                [
-                    'name' => $fileName,
-                    'metadata' => [
-                        'contentType' => $file->getMimeType()
-                    ]
-                ]
+            // Guardar en storage/app/public (almacenamiento local)
+            $path = Storage::disk('public')->putFileAs(
+                $folderPath,
+                $file,
+                $fileName
             );
 
-            // Hacer el archivo público
-            $object->update(['acl' => []], ['predefinedAcl' => 'PUBLICREAD']);
+            if (!$path) {
+                throw new \Exception("No se pudo guardar el archivo");
+            }
 
-            // Retornar URL pública
-            $publicUrl = "https://storage.googleapis.com/{$this->bucketName}/{$fileName}";
+            // Generar URL pública
+            $publicUrl = "/storage/" . $path;
             
-            Log::info("Archivo subido exitosamente: {$publicUrl}");
+            Log::info("Archivo guardado localmente: {$publicUrl}");
             return $publicUrl;
 
         } catch (Throwable $e) {
-            Log::error('Error al subir archivo a Firebase: ' . $e->getMessage());
+            Log::error('Error al subir archivo: ' . $e->getMessage());
             throw new \Exception("Error al subir archivo: " . $e->getMessage());
         }
     }
 
     /**
-     * Elimina un archivo de Firebase Storage.
+     * Elimina un archivo del almacenamiento.
      * 
-     * @param string $imageUrl URL pública del archivo
+     * @param string $fileUrl URL del archivo a eliminar
      * @return bool true si se eliminó correctamente
      * @throws \Exception
      */
-    public function deleteImage($imageUrl)
+    public function deleteImage($fileUrl)
     {
         try {
             // Validar URL
-            if (!$imageUrl) {
+            if (!$fileUrl) {
                 Log::warning("URL de imagen vacía para eliminar");
                 return false;
             }
 
-            // Extraer nombre del archivo desde la URL
-            // URL: https://storage.googleapis.com/{bucket}/{path}
-            $bucketUrl = "https://storage.googleapis.com/{$this->bucketName}/";
-            
-            if (strpos($imageUrl, $bucketUrl) !== 0) {
-                Log::warning("URL de imagen no pertenece al bucket: {$imageUrl}");
-                return false;
+            // Extraer path relativo de la URL
+            // URL: /storage/productos/filename.jpg
+            if (strpos($fileUrl, '/storage/') === 0) {
+                $filePath = str_replace('/storage/', '', $fileUrl);
+                Storage::disk('public')->delete($filePath);
+                Log::info("Archivo eliminado: {$fileUrl}");
+                return true;
             }
 
-            // Obtener path relativo
-            $fileName = str_replace($bucketUrl, '', $imageUrl);
-
-            // Obtener bucket y eliminar objeto
-            $bucket = $this->storage->getBucket($this->bucketName);
-            $bucket->object($fileName)->delete();
-
-            Log::info("Archivo eliminado exitosamente: {$fileName}");
-            return true;
+            return false;
 
         } catch (Throwable $e) {
-            Log::error('Error al eliminar archivo de Firebase: ' . $e->getMessage());
-            // No lanzar excepción para que la eliminación del producto continúe
+            Log::error('Error al eliminar archivo: ' . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Obtiene la URL pública de un archivo en Firebase.
+     * Obtiene la URL pública de un archivo.
      * 
      * @param string $fileName Nombre/ruta del archivo
      * @return string URL pública
      */
     public function getPublicUrl($fileName)
     {
-        return "https://storage.googleapis.com/{$this->bucketName}/{$fileName}";
+        return "/storage/" . $fileName;
     }
 }

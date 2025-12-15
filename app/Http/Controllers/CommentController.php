@@ -8,12 +8,12 @@ use App\Models\Product;
 
 class CommentController extends Controller
 {
-    // CREAR COMENTARIO
+    // CREAR COMENTARIO (requiere autenticación)
     public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'text' => 'required|string'
+            'text' => 'required|string|max:200'  // Máximo 200 caracteres como se requiere
         ]);
 
         Comment::create([
@@ -25,7 +25,7 @@ class CommentController extends Controller
         return response()->json(['message' => 'Comentario guardado'], 201);
     }
 
-    // LISTAR COMENTARIOS POR PRODUCTO
+    // LISTAR COMENTARIOS POR PRODUCTO (público - sin autenticación)
     public function showByProduct($product_id)
     {
         $comments = Comment::where('product_id', $product_id)
@@ -36,7 +36,6 @@ class CommentController extends Controller
                                    'id' => $comment->id,
                                    'user_name' => $comment->user->name,
                                    'user_id' => $comment->user_id,
-                                   'comment' => $comment->text,
                                    'text' => $comment->text,
                                    'product_id' => $comment->product_id,
                                    'created_at' => $comment->created_at

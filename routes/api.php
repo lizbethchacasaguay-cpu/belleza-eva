@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\FavoriteController; 
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\UserController;
 
 
 // Ruta de prueba
@@ -28,6 +29,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // ✅ RUTA PÚBLICA PARA MOSTRAR PRODUCTOS AL FRONTEND
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']); // ✅ PÚBLICO: Detalles de producto
+Route::get('/comments/product/{product_id}', [CommentController::class, 'showByProduct']); // ✅ PÚBLICO: Ver comentarios
 
 
 // Rutas protegidas (requieren token)
@@ -36,14 +39,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // GET productos (todos los usuarios pueden ver)
-    Route::get('/products/{id}', [ProductController::class, 'show']);
-
     // CRUD de productos (SOLO ADMIN)
     Route::middleware('admin')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+        // GESTIÓN DE USUARIOS (SOLO ADMIN)
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
+        Route::put('/users/{id}/role', [UserController::class, 'changeRole']);
+        Route::delete('/users/{id}', [UserController::class, 'destroy']);
     });
 
     // Favoritos
@@ -53,7 +60,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Comentarios
     Route::post('/comments', [CommentController::class, 'store']);
-    Route::get('/comments/product/{product_id}', [CommentController::class, 'showByProduct']);
     
 });
 
